@@ -3,10 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { getaccessToken } from '@/actions/get-access-token';
 import { scheduleMeeting } from '@/actions/schedule-meeting';
-// import { getMeetingDetials } from '@/actions/meeting-details';
+import { getMeetingDetials } from '@/actions/meeting-details';
 import { useSearchParams } from "next/navigation";
 import { ZoomMtg } from "@zoomus/websdk";
-// import { LeaveMeeting } from '../actions/leave-meeting';
+import Link from 'next/link';
+import { LeaveMeeting } from '../actions/leave-meeting';
 
 ZoomMtg.setZoomJSLib('https://source.zoom.us/2.18.2/lib', '/av');
 ZoomMtg.preLoadWasm();
@@ -20,7 +21,7 @@ const ScheduleMeetingForm = () => {
     const query = useSearchParams();
     const [meetinginfo, setmeetinginfo] = useState({ id: "", password: "", joinurl: "", starturl: "" })
     const [token, settoken] = useState("");
-    // const [meetings, setMeetings] = useState([]);
+    const [meetings, setMeetings] = useState([]);
     
 
     const [meetingDetails, setMeetingDetails] = useState({
@@ -72,7 +73,7 @@ const ScheduleMeetingForm = () => {
 
 
     const startMeeting = async () => {
-        fetchZak;
+        await fetchZak(accesstoken);
         try {
             if (ZoomMtg.init) {
                 ZoomMtg.init({
@@ -85,6 +86,12 @@ const ScheduleMeetingForm = () => {
                             }
                         }
                         console.log(success);
+
+                         // Set meeting to record by default
+                            ZoomMtg.record({
+                                record: true,
+                            });
+
                         const signature = ZoomMtg.generateSDKSignature({ sdkKey: "v0claIFUQBKey7Umcmw95g", sdkSecret: "iyxFiFduAwqgF6hMHANxiDidxJ4qKO4s", meetingNumber: meetinginfo.id.toString(), role: "1" });
                         if (ZoomMtg.join) {
                             ZoomMtg.join({
@@ -94,6 +101,7 @@ const ScheduleMeetingForm = () => {
                                 meetingNumber: meetinginfo.id,
                                 userName: "rahul",
                                 zak: token,
+                                
                                 success: (success) => {
                                     console.log(success);
                                 },
@@ -166,6 +174,7 @@ const ScheduleMeetingForm = () => {
         if(typeof document != undefined ){
             document.getElementById("zmmtg-root")?.classList.add("hidden")
         }
+        fetchZak(authToken);
       }, [query]);
     
 
@@ -179,17 +188,17 @@ const ScheduleMeetingForm = () => {
     };
 
 
-    // const MeetingList = async () => {
-    //     try {
-    //         const authToken = query.get("code") || "";
-    //         await accessToken(authToken);
+    const MeetingList = async () => {
+        try {
+            const authToken = query.get("code") || "";
+            await accessToken(authToken);
 
-    //         const fetchedMeetings = await getMeetingDetials(accesstoken);
-    //         setMeetings(fetchedMeetings);
-    //     } catch (error) {
-    //         console.error('Error fetching meetings:', error);
-    //     }
-    // };
+            const fetchedMeetings = await getMeetingDetials(accesstoken);
+            setMeetings(fetchedMeetings);
+        } catch (error) {
+            console.error('Error fetching meetings:', error);
+        }
+    };
 
 
     const scheduleMeet = async (e) => {
@@ -201,18 +210,18 @@ const ScheduleMeetingForm = () => {
         
     };
 
-    // const leaveMeeting = async () => {
+    const leaveMeeting = async () => {
         // if (ZoomMtg.leave) {
         //   ZoomMtg.leave();
         //   console.log('Leaving the meeting...');
         // }
 
-    //     const result = await LeaveMeeting({meetingId: meetinginfo.id});
-    //     console.log(result)
-    //   };
+        const result = await LeaveMeeting({meetingId: meetinginfo.id});
+        console.log(result)
+      };
 
 
-      return (
+    return (
         <div>
             <section className="max-w-4xl z-[9999] p-6 mx-auto rounded-md shadow-md  mt-20">
                 <h1 className="text-xl font-bold capitalize">Meeting Details</h1>
@@ -243,23 +252,33 @@ const ScheduleMeetingForm = () => {
                 </form>
             </section>
             <div>
-                <h1 className="text-xl">Meeting Details</h1>
-                <p>meeting id : {meetinginfo.id}</p>
-                <p>meeting password : {meetinginfo.password}</p>
-                <p>start url : <a href="{meetinginfo.starturl}">{meetinginfo.starturl}</a></p>
-                <p>join url : <a href="{meetinginfo.joinurl}">{meetinginfo.joinurl}</a></p>
-
+                <h1 className="text-xl  px-4 py-2">Meeting Details</h1>
+                <p className="px-4 py-2">meeting id : {meetinginfo.id}</p>
+                <p className="px-4 py-2">meeting password : {meetinginfo.password}</p>
+                <p className="px-4 py-2">start url : <Link href="{meetinginfo.starturl}">{meetinginfo.starturl}</Link></p>
+                <p className="px-4 py-2">join url : <Link href="{meetinginfo.joinurl}">{meetinginfo.joinurl}</Link></p>         
             </div>
 
+           
             
-            <div className="h-screen  w-screen flex items-center justify-center gap-10 p-10">
-            <div className="flex z-[9999] fixed top-0 bg-orange-500 text-xl p-4 text-white gap-8">
-                <button onClick={startMeeting}>Start Meeting</button>
-                <button onClick={joinMeeting}>Join Meeting</button>
-            </div>
-            
-        </div>
+            <div className="h-screen w-screen flex items-center justify-center gap-10 p-10">
+                <div className="flex z-[9999] fixed top-0 bg-orange-500 text-xl p-4 text-white gap-8">
+                    <button onClick={startMeeting}>Start Meeting</button>
+                    <button onClick={joinMeeting}>Join Meeting</button>
+                    <button onClick={MeetingList}>Schedule Meetings List</button>
+                    <button onClick={leaveMeeting}>Leave Meeting</button>
 
+                    <ul>
+                    {meetings.map(meeting => (
+                        <li key={meeting.id} className="bg-white shadow-md p-4 mb-4 rounded">
+                        <p className="text-orange-500 mb-2">Topic: {meeting.topic}</p>
+                        <p className="text-gray-700">Start Time: {new Date(meeting.start_time).toLocaleString()}</p>
+                        </li>
+                    ))}
+                    </ul>
+                </div>
+            </div>
+                
             
            
         </div>
