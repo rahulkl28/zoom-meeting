@@ -6,7 +6,7 @@ export const LeaveMeeting = async (meetingId) => {
         return res.status(405).json({ message: 'Method Not Allowed' });
     }
     
-    const { meetingId } = req.body;
+  
     
       try {
         const response = await fetch(`https://api.zoom.us/v2/meetings/${meetingId}/status`, {
