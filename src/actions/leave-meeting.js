@@ -1,12 +1,13 @@
 "use server"
 
 
-export const LeaveMeeting = async ({accesstoken}) => {
+export const LeaveMeeting = async ({accesstoken, meetingId}) => {
+  console.log(meetingId);
     if (req.method !== 'PUT') {
         return res.status(405).json({ message: 'Method Not Allowed' });
     }
     
-    const { meetingId } = req.body;
+
     
       try {
         const response = await fetch(`https://api.zoom.us/v2/meetings/${meetingId}/status`, {

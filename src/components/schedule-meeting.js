@@ -211,13 +211,12 @@ const ScheduleMeetingForm = () => {
     };
 
     const leaveMeeting = async () => {
-        // if (ZoomMtg.leave) {
-        //   ZoomMtg.leave();
-        //   console.log('Leaving the meeting...');
-        // }
-
-        const result = await LeaveMeeting({meetingId: meetinginfo.id});
-        console.log(result)
+        try {
+          const result = await LeaveMeeting({ accesstoken: accesstoken, meetingId: meetinginfo.id });
+          console.log(result);
+        } catch (error) {
+          console.error('Error leaving meeting:', error);
+        }
       };
 
 
